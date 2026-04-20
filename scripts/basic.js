@@ -1,16 +1,9 @@
 (async () => {
-  const MIN_DELAY = 60; // Shortest delay between keys in ms
-  const MAX_DELAY = 140; // Longest delay between keys in ms
-  const TARGET_DELAY = 120; // Average delay between keys in ms
-  const REAL_ACCURACY = 100; // Percentage of keystrokes without uncorrected errors
-  const FAKE_ACCURACY = 99; // Percentage of keystrokes without corrected typos
+  const TARGET_WPM = 85; // Target words per minute
+  const REAL_ACCURACY = 97; // Percentage of keystrokes without uncorrected errors
+  const FAKE_ACCURACY = 100; // Percentage of keystrokes without corrected typos
 
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-  const dynamicDelay = () => {
-    const delay = TARGET_DELAY + (Math.random() * 40 - 20);
-    return Math.max(MIN_DELAY, Math.min(delay, MAX_DELAY));
-  };
 
   const ALPHABET = "abcdefghijklmnopqrstuvwxyz";
   const getRandomWrongChar = (correctChar) => {
@@ -109,23 +102,51 @@
     inputField.dispatchEvent(new KeyboardEvent("keyup", eventOpts));
   };
 
-  for (let i = 0; i < characters.length; i++) {
+  const N = characters.length;
+  const fakeValid = Math.floor((FAKE_ACCURACY / 100) * N);
+  const realValid = Math.min(Math.floor((REAL_ACCURACY / 100) * N), fakeValid);
+
+  const actions =[
+    ...Array(realValid).fill("A"),
+    ...Array(N - fakeValid).fill("B"),
+    ...Array(fakeValid - realValid).fill("C"),
+  ];
+
+  for (let i = actions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));[actions[i], actions[j]] = [actions[j], actions[i]];
+  }
+
+  const sequence =[];
+  let totalWeight = 0;
+
+  for (let i = 0; i < N; i++) {
     const char = characters[i];
-
-    if (Math.random() * 100 > REAL_ACCURACY) {
-      Type(getRandomWrongChar(char));
-      await sleep(dynamicDelay());
-      continue;
+    if (actions[i] === "A") {
+      sequence.push({ char, w: 1 });
+      totalWeight += 1;
+    } else if (actions[i] === "B") {
+      sequence.push({ char: getRandomWrongChar(char), w: 1 });
+      totalWeight += 1;
+    } else {
+      sequence.push({ char: getRandomWrongChar(char), w: 0.8 });
+      sequence.push({ char: "Backspace", w: 0.4 });
+      sequence.push({ char, w: 1.5 });
+      totalWeight += 2.7;
     }
+  }
 
-    if (Math.random() * 100 > FAKE_ACCURACY) {
-      Type(getRandomWrongChar(char));
-      await sleep(dynamicDelay());
-      Type("Backspace");
-      await sleep(dynamicDelay() + 50);
+  const targetDurationMs = (realValid * 12000) / TARGET_WPM;
+  let expectedTime = Date.now();
+
+  for (let i = 0; i < sequence.length; i++) {
+    if (i === 0) {
+      expectedTime = Date.now();
+    } else {
+      const delay = (sequence[i].w / totalWeight) * targetDurationMs * (1 + (Math.random() * 0.4 - 0.2));
+      expectedTime += delay;
+      const wait = expectedTime - Date.now();
+      if (wait > 0) await sleep(wait);
     }
-
-    Type(char);
-    await sleep(dynamicDelay());
+    Type(sequence[i].char);
   }
 })();

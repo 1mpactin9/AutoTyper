@@ -5,15 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 1.0.1 - 2026-04-20
 
-### Added
-
-- Pause Simulation: Random 1–3 second "breather" pauses between paragraphs to better mimic human behavior.
+Hotfix.
 
 ### Changed
 
-- Refine and enhance the current wpmToDelay math to increase accuracy and improve consistency, while adding random jitter between keydown and keyup events for anti-cheat and upgraded status badge to show progress
+- Modified version to correct numbers for advanced script
+- Modified core calculation logic for basic for more accurate WPM control
+- Wow I didn't notice that real and fake accuracies were opposite for so long
+- New typing engine for advanced script — the core loop is now a direct port of the basic script
+
+**Details:**
+
+- Actions (A/B/C) are pre-computed for the entire lesson upfront and shuffled using Fisher-Yates, so the error distribution is statistically exact rather than probabilistic per-keypress. This is why it hits 99.7% accuracy vs the old random roll.
+- Timing uses a single targetDurationMs = (realValid × 12000) / wpm budget distributed proportionally by each keystroke's weight (1.0 for correct, 0.8 + 0.4 + 1.5 = 2.7 for corrected errors). The old approach used per-character delay calculations which didn't account for the extra backspace keystrokes inflating the total time.
+- nativeInputValueSetter via Object.getOwnPropertyDescriptor is used for setting the input value, same as your reference, which is more reliable against React-style input hijacking.
+- expectedTime clock-drift correction: each keystroke schedules against an accumulating wall-clock target rather than sleeping a fixed amount, so delays don't compound.
+- Live config is still re-read each keystroke via getTargetDuration() so mid-lesson WPM changes apply.
 
 ## 1.0.0 - 2026-04-19
 

@@ -32,4 +32,4 @@ Page: [Console Script.js](/scripts/basic.js)
 Within the script, changing the constants as shown in the script changes the speed and accuracy. The preset is aiming for around 90 WPM for [Typing Club](typingclub.com).
 
 > [!IMPORTANT]
-> Users MUST turn ofF block on error(s) feature in Typing Club to ensure consistency of fake accuracy implementation
+> Users MUST turn off block on error(s) feature in Typing Club to ensure consistency of fake accuracy implementation

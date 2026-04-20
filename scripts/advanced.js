@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         TypingClub AutoTyper
 // @namespace    https://typingclub.com/
-// @version      2.0.1
-// @description  Automates TypingClub
-// @author       B****
+// @version      1.0.1
+// @description  Automates TypingClub lessons with human-like typing and WPM/accuracy control.
+// @author       AutoTyper
 // @match        *://*.typingclub.com/*
 // @match        *://*.edclub.com/*
 // @grant        none
@@ -12,7 +12,6 @@
 
 (function () {
   "use strict";
-
   const EXECUTABLE_SELECTORS = new Set([
     "cmn-code",
     "cmn-definition",
@@ -22,42 +21,9 @@
     "cmn-tip",
     "cmn-travel1",
     "qwerty-caps",
-    "qwerty-symbols2",
     "qwerty-symbols3",
     "qwerty-z",
     "qwerty-numbers",
-  ]);
-
-  const COMMON_WORDS = new Set([
-    "a",
-    "an",
-    "the",
-    "is",
-    "it",
-    "in",
-    "on",
-    "at",
-    "to",
-    "do",
-    "go",
-    "be",
-    "he",
-    "she",
-    "we",
-    "or",
-    "if",
-    "of",
-    "as",
-    "up",
-    "no",
-    "so",
-    "my",
-    "by",
-    "me",
-    "hi",
-    "ok",
-    "yes",
-    "no",
   ]);
 
   const state = {
@@ -188,7 +154,6 @@
     state.scrapeData = results;
     return queue;
   }
-
   function goToMenu() {
     if (isMenuPage()) return true;
     state.scriptNavigating = true;
@@ -225,79 +190,15 @@
     return true;
   }
 
-  function wpmToDelay(wpm) {
-    return Math.round(10800 / Math.max(wpm, 10));
-  }
-
-  function getWordComplexity(word) {
-    if (!word || word.length === 0) return 1.0;
-    const lower = word.toLowerCase().replace(/[^a-z]/g, "");
-    if (COMMON_WORDS.has(lower)) return 0.8;
-    if (lower.length <= 3) return 0.85;
-    if (lower.length >= 8) return 1.15;
-    if (/(.)\1/.test(lower)) return 1.1;
-    return 1.0;
-  }
+  const ALPHABET = "abcdefghijklmnopqrstuvwxyz";
 
   function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   function getRandomWrongChar(correctChar) {
-    const possible = "abcdefghijklmnopqrstuvwxyz";
-    let c = possible.charAt(Math.floor(Math.random() * possible.length));
+    let c = ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
     return c === correctChar ? (c === "a" ? "b" : "a") : c;
-  }
-
-  async function typeChar(inputField, char) {
-    inputField.focus();
-    const isEnter = char === "\n";
-    const isSpace = char === " ";
-    const isBackspace = char === "Backspace";
-
-    let eventKey = char,
-      eventCode = `Key${char.toUpperCase()}`,
-      eventKeyCode = char.charCodeAt(0);
-    if (isEnter) {
-      eventKey = "Enter";
-      eventCode = "Enter";
-      eventKeyCode = 13;
-    }
-    if (isSpace) {
-      eventKey = " ";
-      eventCode = "Space";
-      eventKeyCode = 32;
-    }
-    if (isBackspace) {
-      eventKey = "Backspace";
-      eventCode = "Backspace";
-      eventKeyCode = 8;
-    }
-
-    const opts = {
-      key: eventKey,
-      code: eventCode,
-      keyCode: eventKeyCode,
-      which: eventKeyCode,
-      bubbles: true,
-      cancelable: true,
-    };
-    inputField.dispatchEvent(new KeyboardEvent("keydown", opts));
-    if (!isEnter) {
-      if (isBackspace) {
-        inputField.value = inputField.value.slice(0, -1);
-      } else {
-        inputField.value += char;
-      }
-      inputField.dispatchEvent(
-        new InputEvent("input", {
-          data: isBackspace ? null : char,
-          inputType: isBackspace ? "deleteContentBackward" : "insertText",
-          bubbles: true,
-        }),
-      );
-    }
-    inputField.dispatchEvent(new KeyboardEvent("keyup", opts));
   }
 
   function getChars() {
@@ -315,6 +216,63 @@
     );
   }
 
+  function typeChar(inputField, char) {
+    inputField.focus();
+    const isEnter = char === "\n";
+    const isSpace = char === " ";
+    const isBackspace = char === "Backspace";
+
+    const eventKey = isEnter ? "Enter" : isSpace ? " " : char;
+    const eventCode = isEnter
+      ? "Enter"
+      : isSpace
+        ? "Space"
+        : isBackspace
+          ? "Backspace"
+          : `Key${char.toUpperCase()}`;
+    const eventKeyCode = isEnter
+      ? 13
+      : isSpace
+        ? 32
+        : isBackspace
+          ? 8
+          : char.charCodeAt(0);
+
+    const opts = {
+      key: eventKey,
+      code: eventCode,
+      keyCode: eventKeyCode,
+      which: eventKeyCode,
+      bubbles: true,
+      cancelable: true,
+    };
+    inputField.dispatchEvent(new KeyboardEvent("keydown", opts));
+
+    if (!isEnter) {
+      const nativeSetter = Object.getOwnPropertyDescriptor(
+        window.HTMLInputElement.prototype,
+        "value",
+      )?.set;
+      const newValue = isBackspace
+        ? inputField.value.slice(0, -1)
+        : inputField.value + char;
+      if (nativeSetter) {
+        nativeSetter.call(inputField, newValue);
+      } else {
+        inputField.value = newValue;
+      }
+      inputField.dispatchEvent(
+        new InputEvent("input", {
+          data: isBackspace ? null : char,
+          inputType: isBackspace ? "deleteContentBackward" : "insertText",
+          bubbles: true,
+        }),
+      );
+    }
+
+    inputField.dispatchEvent(new KeyboardEvent("keyup", opts));
+  }
+
   async function runTypingSession(cfg, abortSignal) {
     const inputField =
       document.querySelector('input[aria-hidden="true"]') ||
@@ -324,60 +282,66 @@
     const characters = getChars();
     if (characters.length === 0) return false;
 
-    const text = characters.join("");
-    const words = text.split(" ");
-    const complexityMap = [];
-    let ci = 0;
-    for (const word of words) {
-      const mult = getWordComplexity(word);
-      for (let j = 0; j < word.length; j++) {
-        complexityMap[ci++] = mult;
-      }
-      if (ci < characters.length) complexityMap[ci++] = 0.7;
+    const N = characters.length;
+    const liveCfg = getConfig();
+    const fakeValid = Math.floor((liveCfg.fakeAccuracy / 100) * N);
+    const realValid = Math.min(
+      Math.floor((liveCfg.realAccuracy / 100) * N),
+      fakeValid,
+    );
+
+    const actions = [
+      ...Array(realValid).fill("A"),
+      ...Array(N - fakeValid).fill("B"),
+      ...Array(fakeValid - realValid).fill("C"),
+    ];
+    for (let i = actions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [actions[i], actions[j]] = [actions[j], actions[i]];
     }
 
-    const startTime = Date.now();
-    let charsTyped = 0;
+    const sequence = [];
+    let totalWeight = 0;
+    for (let i = 0; i < N; i++) {
+      const char = characters[i];
+      if (actions[i] === "A") {
+        sequence.push({ char, w: 1 });
+        totalWeight += 1;
+      } else if (actions[i] === "B") {
+        sequence.push({ char: getRandomWrongChar(char), w: 1 });
+        totalWeight += 1;
+      } else {
+        sequence.push({ char: getRandomWrongChar(char), w: 0.8 });
+        sequence.push({ char: "Backspace", w: 0.4 });
+        sequence.push({ char, w: 1.5 });
+        totalWeight += 2.7;
+      }
+    }
 
-    for (let i = 0; i < characters.length; i++) {
+    const getTargetDuration = () => {
+      const cfg = getConfig();
+      return (realValid * 12000) / cfg.wpm;
+    };
+
+    let expectedTime = Date.now();
+
+    for (let i = 0; i < sequence.length; i++) {
       if (abortSignal?.aborted) return false;
 
-      const char = characters[i];
-      const mult = complexityMap[i] ?? 1.0;
-
-      const liveCfg = getConfig();
-      const liveBase = wpmToDelay(liveCfg.wpm);
-      const liveVariationMs =
-        wpmToDelay(Math.max(liveCfg.wpm - liveCfg.variation, 10)) - liveBase;
-
-      const progress = i / characters.length;
-      const ramp =
-        progress < 0.1
-          ? 0.7 + progress * 3
-          : progress > 0.9
-            ? 0.9 + (progress - 0.9) * 1.5
-            : 1.0;
-
-      const wave = (Math.random() - 0.5) * 2 * Math.abs(liveVariationMs);
-      const delay = Math.max(30, Math.round(liveBase * mult * ramp + wave));
-
-      if (Math.random() * 100 > liveCfg.realAccuracy) {
-        await typeChar(inputField, getRandomWrongChar(char));
-        await sleep(delay);
-        charsTyped++;
-        continue;
+      if (i === 0) {
+        expectedTime = Date.now();
+      } else {
+        const targetDurationMs = getTargetDuration();
+        const delay =
+          (sequence[i].w / totalWeight) *
+          targetDurationMs *
+          (1 + (Math.random() * 0.4 - 0.2));
+        expectedTime += delay;
+        const wait = expectedTime - Date.now();
+        if (wait > 0) await sleep(wait);
       }
 
-      if (Math.random() * 100 > liveCfg.fakeAccuracy) {
-        await typeChar(inputField, getRandomWrongChar(char));
-        await sleep(delay);
-        await typeChar(inputField, "Backspace");
-        await sleep(delay + 50);
-      }
-
-      await typeChar(inputField, char);
-      await sleep(delay);
-      charsTyped++;
+      typeChar(inputField, sequence[i].char);
     }
 
     return true;
@@ -566,7 +530,6 @@
   function readConfigFromUI() {
     return {
       wpm: parseInt(document.getElementById("at-wpm")?.value) || 80,
-      variation: parseInt(document.getElementById("at-variation")?.value) || 10,
       realAccuracy:
         parseFloat(document.getElementById("at-real-acc")?.value) || 100,
       fakeAccuracy:
@@ -810,7 +773,7 @@
 
       <div class="at-sep"></div>
 
-      <!-- WPM Sliders -->
+      <!-- WPM Slider -->
       <div class="at-section-label">Speed</div>
       <div class="at-slider-group">
         <div class="at-slider-row">
@@ -819,15 +782,6 @@
             <span class="at-slider-value" id="at-wpm-val">80</span>
           </div>
           <input type="range" class="at-slider" id="at-wpm" min="20" max="250" value="80" step="1">
-          <input type="hidden" id="at-wpm-hidden" value="80">
-        </div>
-        <div class="at-slider-row">
-          <div class="at-slider-header">
-            <span class="at-slider-label">Variation ±</span>
-            <span class="at-slider-value" id="at-variation-val">10</span>
-          </div>
-          <input type="range" class="at-slider" id="at-variation" min="0" max="60" value="10" step="1">
-          <input type="hidden" id="at-variation-hidden" value="10">
         </div>
       </div>
 
@@ -836,19 +790,17 @@
       <div class="at-slider-group">
         <div class="at-slider-row">
           <div class="at-slider-header">
-            <span class="at-slider-label">Real Accuracy</span>
-            <span class="at-slider-value" id="at-real-acc-val">100%</span>
+            <span class="at-slider-label">Fake Accuracy</span>
+            <span class="at-slider-value" id="at-fake-acc-val">100%</span>
           </div>
-          <input type="range" class="at-slider acc-slider" id="at-real-acc" min="80" max="100" value="100" step="0.5">
-          <input type="hidden" id="at-real-acc-hidden" value="100">
+          <input type="range" class="at-slider acc-slider" id="at-fake-acc" min="80" max="100" value="100" step="0.5">
         </div>
         <div class="at-slider-row">
           <div class="at-slider-header">
-            <span class="at-slider-label">Fake Accuracy</span>
-            <span class="at-slider-value" id="at-fake-acc-val">98%</span>
+            <span class="at-slider-label">Real Accuracy</span>
+            <span class="at-slider-value" id="at-real-acc-val">98%</span>
           </div>
-          <input type="range" class="at-slider acc-slider" id="at-fake-acc" min="80" max="100" value="98" step="0.5">
-          <input type="hidden" id="at-fake-acc-hidden" value="98">
+          <input type="range" class="at-slider acc-slider" id="at-real-acc" min="80" max="100" value="98" step="0.5">
         </div>
       </div>
 
@@ -924,6 +876,7 @@
         dragging = false;
       }
     });
+
     const resizeHandle = panel.querySelector("#at-resize-handle");
     let resizing = false,
       resizeStartY = 0,
@@ -1050,7 +1003,6 @@
     }
 
     wireSlider("at-wpm", "at-wpm-val", " wpm");
-    wireSlider("at-variation", "at-variation-val", " wpm");
     wireSlider("at-real-acc", "at-real-acc-val", "%", 1);
     wireSlider("at-fake-acc", "at-fake-acc-val", "%", 1);
 
