@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         TypingClub AutoTyper
 // @namespace    https://typingclub.com/
-// @version      1.0.1
+// @version      1.0.2
 // @description  Automates TypingClub lessons with human-like typing and WPM/accuracy control.
-// @author       AutoTyper
+// @author       https://github.com/1mpactin9/AutoTyper
 // @match        *://*.typingclub.com/*
 // @match        *://*.edclub.com/*
 // @grant        none

@@ -5,7 +5,15 @@
 Thrilled to announce [**Fully Automated AutoTyper**](#fully-automated)
 
 ## Fully Automated
-Page: [Tampermonkey Script.js](/scripts/advanced.js)
+The Script: [Tampermonkey Script.js](/scripts/advanced.js)
+
+### Features
+
+- Lesson scraping
+- Automatically skip unexecutable lesson
+- 97% WPM target configuration
+- 99.7% Accuracy configuration
+- Clean user interface
 
 ### How to use?
 
@@ -17,10 +25,17 @@ Page: [Tampermonkey Script.js](/scripts/advanced.js)
 6. start!
 
 > [!NOTE]
-> The latest script's WPM-targeted calculation may be slightly inaccurate due to the unpredictability of Typing Clubs WPM System
+> Please go to extensions > manage extensions and then enable "Allow user scripts" then refresh the page to run the script successfully
 
 ## Single Lesson
-Page: [Console Script.js](/scripts/basic.js)
+The Script: [Console Script.js](/scripts/basic.js)
+
+### Features
+
+- Simple and quick to use
+- Uses the newest key event simulation
+- Configurable speed and accuracy
+- Mimic human typing behavior
 
 ### How to use?
 

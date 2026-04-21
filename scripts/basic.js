@@ -150,3 +150,4 @@
     Type(sequence[i].char);
   }
 })();
+// by https://github.com/1mpactin9/ v1.0.2
