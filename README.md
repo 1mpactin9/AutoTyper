@@ -6,6 +6,7 @@ Thrilled to announce [**Fully Automated AutoTyper**](#fully-automated)
 
 ## Fully Automated
 The Script: [Tampermonkey Script.js](/scripts/advanced.js)
+Beta Updates: [Latest Script.js](/scripts/beta.js)
 
 ### Features
 
