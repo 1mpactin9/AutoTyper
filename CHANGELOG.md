@@ -5,7 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), 
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 1.0.3 - 2026-04-25
+## 1.1.0 - 2026-04-28
+Deprecated update, scripts are still avaliable but not recommend to use.
+
+## 1.0.3 - 2026-04-25 <span style="color:red">DEPRECATED</span>
+### <span style="color:red">ALL versions below are not recommended in use.</span>
 ### Added
 - **Fully Automatic — WPM & Accuracy only:** The UI now only exposes the 3 sliders (WPM, Fake Accuracy, Real Accuracy). Everything else happens automatically once you click Start.
 - **Flow:** Navigates to the menu page (waitForPage("MENU")), scrapes lessons 1–9999 on the live DOM, builds the queue, then immediately begins automation. The status badge shows NAVIGATING… → SCRAPING… → #N during each lesson.

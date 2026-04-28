@@ -2,6 +2,13 @@
 
 **AutoTyper for TypingClub** Educational Purposes Only
 
+#### <span style="color:red">Usage of any scripts within this project may result in school disciplinary action. Use at your own discretion.</span>
+
+> [!WARNING]
+> **IMPORTANT:** Versions v0.0.0 through v1.0.3 contain a significant outdated feature with immediate consequences. The author recently discovered that TC records all information leading to simple discoveries of automation behavior ([DETAILS](/scripts/issue.md)). This could lead to significant school disciplinary action for those automating a tool originally created only for practice.
+> 
+> Please avoid using these versions. A fix is currently in development for **v1.1.0**.
+
 Thrilled to announce [**Fully Automated AutoTyper**](#fully-automated)
 
 ## Fully Automated
